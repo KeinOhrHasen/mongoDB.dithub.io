@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <title>Yurii Zityniuk — mongoDB</title>
+         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+        <body>
+        	<div class="main">
+        		<div class="item">
+        			<div class="task">0 - Roll Back Database</div>
+        			<div class="command">C:\data>mongodump --collection users --db newUser</div>
+        			<div class="result">2018-05-14T17:56:53.475+0300    writing newUser.users to
+						2018-05-14T17:56:53.515+0300<br>    done dumping newUser.users (844 documents)
+					</div>
+        		</div>
+
+        		<div class="item">
+        			<div class="task">Zero query</div>
+        			<div class="command"> C:\>mongo </div>
+        			<div class="result">MongoDB shell version v3.4.2-rc0
+						connecting to: mongodb://127.0.0.1:27017  <br>
+						MongoDB server version: 3.4.2-rc0<br>
+						Server has startup warnings:<br>
+						2018-05-14T01:45:40.133+0300 I CONTROL  [initandlisten]<br>
+						2018-05-14T01:45:40.133+0300 I CONTROL  [initandlisten] ** WARNING: Access control is not enabled for the database.<br>
+						2018-05-14T01:45:40.133+0300 I CONTROL  [initandlisten] **          Read and write access to data and configuration is unrestricted.<br>
+						2018-05-14T01:45:40.134+0300 I CONTROL  [initandlisten]<br>
+						2018-05-14T01:45:40.134+0300 I CONTROL  [initandlisten] Hotfix KB2731284 or later update is not installed, will zero-out data files.<br>
+						2018-05-14T01:45:40.135+0300 I CONTROL  [initandlisten]</div>
+				</div>
+
+
+        		<div class="item">
+        			<div class="task">1 - Find the average age in Alaska</div>
+        			<div class="command">var resAverageAgeByAll = db.users.aggregate( {$group: {'_id': true,  'averageAgeByAll': {$avg: '$age'}}}).toArray() </div>
+        			<div class="command"> resAverageAgeByAll[0] </div>
+
+        			<div class="result">{ "_id" : true, "averageAgeByAll" : 30.377224199288257 }
+					</div>
+        		</div>
+
+
+
+        		<div class="item">
+        			<div class="task">2 - Find the average age of people in the system</div>
+        			<div class="command">var resAverageAgeByAlaska = db.users.aggregate({$match : { 'address': /Alaska/ }}, {$group: { '_id':true,     'averageAgeByAlaska': {$avg: '$age'}}} ).toArray()  </div>
+					<div class="command"> resAverageAgeByAlaska[0]</div>
+				
+        			<div class="result">{ "_id" : true, "averageAgeByAlaska" : 31.5 }
+					</div>
+        		</div>
+
+        		<div class="item">
+        			<div class="task">3 - Starting from Math.ceil (avg + avg_alaska) (ordinal number of the document in the database) find the first person with a friend named Dennis</div>
+        			<div class="command">var resFirstDennis = db.users.aggregate({$skip : 62} ,     // some trouble with adding
+					  {$match:{'friends.name': /Dennis/}}, 
+					{$group: { '_id': '$name',  '_id': '$address' }},
+					{ $limit : 1 }).toArray() </div>
+					<div class="command"> resFirstDennis[0]</div>
+        			<div class="result">{ "_id" : "147 Brighton Avenue, Gila, Oregon, 8928" }
+					</div>
+        		</div>
+
+        		<div class="item">
+        			<div class="task">4 - Find active people from the same state as the previous person and see what kind of fruit they love the most in this state (aggregation)</div>
+        			<div class="command">var resFruit = db.users.aggregate({$match:{ 'address': /Oregon/}}, {$group : { _id:'$favoriteFruit' , lovedFruit:{ $sum: 1}}}, {$sort: {lovedFruit:-1}}, {$limit:1}).toArray()</div>
+        			<div class="command"> resFruit[0]</div>
+					
+        			<div class="result">{ "_id" : "strawberry", "lovedFruit" : 5 }
+					</div>
+        		</div>
+
+        		<div class="item">
+        			<div class="task">5 - Find the oldest registered user with such a favorite fruit</div>
+        			<div class="command">var resEarlyUser = db.users.aggregate({$match:{ favoriteFruit: resFruit[0]._id}}, {$group: { '_id': '$_id'}}, {$sort:{_id:1}}, {$limit:1}).toArray()</div>
+        			<div class="command"> resEarlyUser[0]</div>
+ 					
+        			<div class="result">{ "_id" : ObjectId("5adf3c1544abaca147cdd34c") }
+					</div>
+        		</div>
+
+        		<div class="item">
+        			<div class="task">
+					6 - Add this user your own: {features: 'first apple eater'}</div>
+        			<div class="command">db.users.update({_id:resEarlyUser[0]._id} , {$set: { features: 'first apple eater'}})
+					</div>
+        			<div class="result">WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+					</div>
+        		</div>
+
+        		<div class="item">
+        			<div class="task">7 - Remove all strawberry lovers (write the number of remote users)</div>
+        			<div class="command">db.users.remove({favoriteFruit: 'strawberry' } )  
+					</div>
+        			<div class="result">WriteResult({ "nRemoved" : 253 })
+					</div>
+        		</div>
+        	</div>
+        <style>
+        	body{
+        		background: #2d1950;
+        		color:#fafafa;
+        		font-size: 15px;	
+        	}
+        	
+        	.main{
+        		width: 900px;
+        		margin: 0 auto;
+
+        	}
+
+			.item{
+				margin: 50px 0;
+				background: #00000080;
+				padding: 20px;
+			}
+
+			.item .task{
+				font-weight: bold;
+			}
+
+			.item .command, .item .result{
+				color:#fff;
+				font-family: 'Source Code Pro', monospace;
+
+			}
+
+			.item .command{
+				margin: 20px 0 20px 20px;
+			}
+
+			.item .command::before{
+				content: '>';
+				font-size: 15px;
+				padding-right: 10px;
+
+			};
+
+
+
+
+
+
+
+        </style>
+        </body>
+</html>
