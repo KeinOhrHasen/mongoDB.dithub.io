@@ -1,2 +1,2 @@
-# mongoDB.dithub.io
-test query to MongoDB for Binary Studio Academy
+### mongoDB.dithub.io
+*test query to MongoDB for Binary Studio Academy
